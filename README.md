@@ -213,9 +213,9 @@ backups/                版本快照
 
 ## 备份
 
-- `backups/tricolor-relief-continuous-20261113.tar.gz`（当前版）
-- 早先版本保留在 `backups/`。
-- 不包含 `node_modules`、`dist`、`tmp`。
+- 本机备份目录：`backups/`（已在 `.gitignore` 中，不随仓库上传）
+- 当前版本：`backups/tricolor-relief-continuous-20261113.tar.gz`
+- 备份不包含 `node_modules`、`dist`、`tmp`。
 
 ## 当前状态
 
