@@ -195,6 +195,19 @@ docs/                   截图、参考意见存档
 backups/                版本快照
 ```
 
+## 性能与空闲行为
+
+- 渲染器已改为**按需 requestAnimationFrame**：没有交互、没有自动旋转、没有相机/零件过渡时不再出帧。
+- 页面隐藏（`visibilitychange`）时取消当前帧；恢复可见时再请求一帧。
+- 页面关闭（`pagehide`、非 bfcache）时：
+  - 取消动画帧；
+  - 断开 ResizeObserver；
+  - 释放几何、材质、WebGL renderer；
+  - 清除待执行的 rebuild timer。
+- 无 `setInterval`；几何重建会 dispose 旧 geometry。
+- 实测（无头 Chromium，空闲 5 秒）：`TaskDuration` 增量约 `0.0005 s`，JS 脚本增量 `0.0000 s`；
+  `Page.setWebLifecycleState(frozen)` 3 秒增量约 `0.0004 s`。没有后台计算循环。
+
 ## 备份
 
 - `backups/tricolor-relief-continuous-20261113.tar.gz`（当前版）
