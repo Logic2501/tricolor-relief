@@ -1,0 +1,12 @@
+node_modules/
+dist/
+tmp/
+.npm-cache/
+.DS_Store
+*.log
+backups/
+.env
+*.pem
+id_ed25519
+id_ed25519.pub
+.vite/

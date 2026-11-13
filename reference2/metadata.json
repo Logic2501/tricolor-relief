@@ -1,0 +1,67 @@
+{
+  "source": "参考2.jpeg",
+  "source_size": [
+    1600,
+    1600
+  ],
+  "crop_bbox_ltrb": [
+    367,
+    231,
+    1208,
+    1413
+  ],
+  "cropped_size": [
+    841,
+    1182
+  ],
+  "threecolor_size": [
+    841,
+    1182
+  ],
+  "palette": [
+    {
+      "rgb": [
+        227,
+        183,
+        55
+      ],
+      "hex": "#e3b737",
+      "pixels": 190175
+    },
+    {
+      "rgb": [
+        212,
+        200,
+        185
+      ],
+      "hex": "#d4c8b9",
+      "pixels": 512196
+    },
+    {
+      "rgb": [
+        47,
+        104,
+        135
+      ],
+      "hex": "#2f6887",
+      "pixels": 291691
+    }
+  ],
+  "unique_rgb_count": 3,
+  "kmeans_inertia": 1109815040.0,
+  "edge_aware": {
+    "source": "cropped luminance / depth",
+    "threshold": 40.0,
+    "edge_fraction": 0.09786512310097358,
+    "edge_ink": "darkest palette colour"
+  },
+  "depth": {
+    "file": "reference2-depth.png",
+    "kind": "luminance-derived pseudo depth",
+    "size": [
+      841,
+      1182
+    ],
+    "range": "0..255"
+  }
+}

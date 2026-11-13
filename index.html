@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#070910" />
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect width=%2732%27 height=%2732%27 rx=%278%27 fill=%27%23070a0f%27/%3E%3Crect x=%278%27 y=%2713%27 width=%274%27 height=%2711%27 rx=%271.5%27 fill=%27%23f5c542%27/%3E%3Crect x=%2714%27 y=%278%27 width=%274%27 height=%2716%27 rx=%271.5%27 fill=%27%23ed3b91%27/%3E%3Crect x=%2720%27 y=%2715%27 width=%274%27 height=%279%27 rx=%271.5%27 fill=%27%2320b9cf%27/%3E%3C/svg%3E"
+    />
+    <meta
+      name="description"
+      content="三色浮雕垂直分层穿插：群岛式表面、三色图与深度图输入、底部实心连接层与体积互斥验证。"
+    />
+    <title>三色浮雕 · 垂直分层穿插</title>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="scene" aria-label="三色浮雕三维视图"></canvas>
+      <div class="backdrop" aria-hidden="true"></div>
+      <div class="vignette" aria-hidden="true"></div>
+
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <span class="mark-yellow"></span>
+            <span class="mark-magenta"></span>
+            <span class="mark-cyan"></span>
+          </div>
+          <div class="brand-copy">
+            <span class="eyebrow">FDM GEOMETRY STUDY · 01</span>
+            <h1>三色浮雕 <span>垂直分层穿插</span></h1>
+          </div>
+        </div>
+
+        <div class="top-meta">
+          <div class="meta-stat">
+            <span id="meta-sites-label">点阵单元</span>
+            <strong id="meta-sites">—</strong>
+          </div>
+          <div class="meta-stat">
+            <span>独立实体</span>
+            <strong>03</strong>
+          </div>
+          <div class="verify-pill" id="verify-pill" role="status" aria-live="polite">
+            <i></i>
+            <span id="verify-label">几何验证通过</span>
+          </div>
+        </div>
+      </header>
+
+      <main class="stage" aria-label="三维视口">
+        <div class="view-readout">
+          <span class="readout-index" id="readout-index">01</span>
+          <span>
+            <strong id="readout-title">组合视图</strong>
+            <small id="readout-subtitle">三件互补 · 完整覆盖原始浮雕</small>
+          </span>
+        </div>
+
+        <div class="axis-hint" aria-hidden="true">
+          <span class="axis axis-z">Z</span>
+          <span class="axis axis-x">X</span>
+          <span class="axis axis-y">Y</span>
+          <i class="axis-origin"></i>
+        </div>
+      </main>
+
+      <aside class="panel panel-left" aria-label="视图控制">
+        <div class="panel-topline">
+          <span>VIEW CONTROL</span>
+          <span class="panel-code">A / 01</span>
+        </div>
+
+        <section class="panel-section">
+          <div class="section-heading">
+            <h2>视图模式</h2>
+            <span>VIEW</span>
+          </div>
+
+          <div class="mode-grid">
+            <button class="mode-btn is-active" data-mode="assembled" type="button">
+              <span class="mode-icon" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="mode-copy"><b>组合</b><small>ASSEMBLED</small></span>
+              <em>01</em>
+            </button>
+            <button class="mode-btn" data-mode="exploded" type="button">
+              <span class="mode-icon is-exploded" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="mode-copy"><b>爆炸</b><small>EXPLODED</small></span>
+              <em>02</em>
+            </button>
+            <button class="mode-btn mode-btn-wide" data-mode="xray" type="button">
+              <span class="mode-icon is-xray" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="mode-copy"><b>透明</b><small>X-RAY</small></span>
+              <em>03</em>
+            </button>
+          </div>
+
+          <div class="solo-block">
+            <div class="label-row">
+              <span>零件多选</span>
+              <span>MULTI SELECT</span>
+            </div>
+            <div class="part-switcher">
+              <button class="part-pill is-yellow" data-solo="0" type="button">
+                <i></i><span>黄</span>
+              </button>
+              <button class="part-pill is-magenta" data-solo="1" type="button">
+                <i></i><span>品红</span>
+              </button>
+              <button class="part-pill is-cyan" data-solo="2" type="button">
+                <i></i><span>青蓝</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="range-control" id="explode-control">
+            <div class="range-label">
+              <span>爆炸间距 <small>每层沿 Z 位移</small></span>
+              <output id="explode-output">26 mm</output>
+            </div>
+            <input
+              id="explode-range"
+              type="range"
+              min="0"
+              max="68"
+              step="1"
+              value="26"
+              aria-label="爆炸视图零件间距"
+            />
+          </div>
+
+          <div class="range-control is-hidden" id="section-control" hidden>
+            <div class="range-label">
+              <span>剖切位置 <small>沿 Y 轴</small></span>
+              <output id="section-output">+02 mm</output>
+            </div>
+            <input
+              id="section-range"
+              type="range"
+              min="-36"
+              max="36"
+              step="1"
+              value="2"
+              aria-label="剖切平面位置"
+            />
+          </div>
+
+          <div class="toggle-grid">
+            <label class="toggle">
+              <input type="checkbox" id="toggle-dots" checked />
+              <span class="switch"></span>
+              <span>点阵标记</span>
+            </label>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-boundaries" checked />
+              <span class="switch"></span>
+              <span>分区边线</span>
+            </label>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-rotate" />
+              <span class="switch"></span>
+              <span>自动旋转</span>
+            </label>
+          </div>
+
+          <button class="text-button" id="reset-camera" type="button">
+            <span>重置视角</span>
+            <svg viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M13 8a5 5 0 1 1-1.6-3.7M13 2v4h-4" />
+            </svg>
+          </button>
+        </section>
+
+        <section class="panel-section part-legend">
+          <div class="section-heading compact">
+            <h2>三件实体</h2>
+            <span>MATERIAL BATCHES</span>
+          </div>
+          <div id="legend-list"></div>
+        </section>
+
+        <section class="panel-section principle-section">
+          <div class="section-heading compact">
+            <h2>垂直分区逻辑</h2>
+            <span>VERTICAL LOGIC</span>
+          </div>
+          <div class="principle-diagram" aria-hidden="true">
+            <span class="principle-guide">h(x, y)</span>
+            <div class="principle-columns">
+              <i class="p-yellow"></i>
+              <i class="p-magenta"></i>
+              <i class="p-cyan"></i>
+              <i class="p-gap"></i>
+              <i class="p-yellow short"></i>
+              <i class="p-cyan tall"></i>
+              <i class="p-magenta"></i>
+            </div>
+            <span class="principle-base">Z = 0 · 统一底面</span>
+          </div>
+          <p class="principle-copy">
+            三色图按原始比例取样为坐标点阵；下两层在点阵位置生成柱体，
+            顶层黄色作为负片填充间隙。支撑层自上而下逐层减去下层柱体，
+            三件在不同 Z 区间内完全互补，不使用额外方形点孔。
+          </p>
+          <div class="principle-stats">
+            <span><b id="stat-grid">450 × 525</b> XY 栅格</span>
+            <span><b id="stat-cell">0.20 mm</b> 采样步距</span>
+          </div>
+        </section>
+      </aside>
+
+      <aside class="panel panel-right" aria-label="点阵参数与验证">
+        <div class="panel-topline">
+          <span>LATTICE &amp; PROOF</span>
+          <span class="panel-code">B / 02</span>
+        </div>
+
+        <section class="panel-section shape-section">
+          <div class="section-heading">
+            <h2>输入图像</h2>
+            <span>IMAGE SOURCES</span>
+          </div>
+          <div class="source-list">
+            <div class="source-row">
+              <div class="source-copy">
+                <span class="shape-kind">DEPTH / 灰度</span>
+                <strong id="shape-name">reference2-depth.png</strong>
+                <small id="shape-range">H 1.0 – 7.0 mm</small>
+              </div>
+              <div class="shape-source-actions">
+                <button id="upload-depth" type="button" title="载入灰度深度图">
+                  <svg viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M8 2v8m0-8L5 5m3-3 3 3M2.5 10.5v2h11v-2" />
+                  </svg>
+                  载入
+                </button>
+                <button id="reset-shape" type="button">内置</button>
+                <button id="load-derived-depth" type="button" title="根据当前三色图派生深度">派生</button>
+              </div>
+            </div>
+            <div class="source-row">
+              <div class="source-copy">
+                <span class="shape-kind">COLOR / 三色</span>
+                <strong id="color-name">reference2-threecolor.png</strong>
+                <small id="color-status">参考图待载入</small>
+              </div>
+              <div class="shape-source-actions">
+                <button id="upload-color" type="button" title="载入三色图案图">
+                  <svg viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M2.5 3.5h11v9h-11zM2.5 7.5h11M6.5 3.5v9" />
+                  </svg>
+                  载入
+                </button>
+                <button id="reset-color" type="button" disabled>点阵</button>
+              </div>
+            </div>
+          </div>
+          <button class="demo-button" id="load-demo" type="button">
+            <span>重新载入参考2</span>
+            <small>三色图 + 深度图</small>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" /></svg>
+          </button>
+          <input id="depth-file" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+          <input id="color-file" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+          <p class="shape-hint">
+            图像按原始比例取样，不拉伸。深度图黑 = 低、白 = 高，
+            归一化到 1–7 mm；三色图取成坐标点阵，固定黄色为顶层负片。
+          </p>
+        </section>
+
+        <section class="panel-section" id="dot-settings">
+          <div class="section-heading">
+            <h2>点阵与层色</h2>
+            <span>LATTICE &amp; LAYERS</span>
+          </div>
+          <label class="invert-row">
+            <input id="continuous-mode" type="checkbox" checked />
+            <span>连续色块（实验）</span>
+            <small>AUTO JOIN</small>
+          </label>
+          <div class="range-control">
+            <div class="range-label">
+              <span>点阵密度 <small>采样点间距，越小越密</small></span>
+              <output id="pitch-output">1.0 mm</output>
+            </div>
+            <input
+              id="pitch-range"
+              type="range"
+              min="0.8"
+              max="3"
+              step="0.1"
+              value="1.0"
+              aria-label="三色图点阵采样间距"
+            />
+          </div>
+          <div class="layer-color-grid">
+            <label>
+              <span>第 1 层 / 顶</span>
+              <select id="layer-top" aria-label="顶层颜色">
+                <option value="0">黄</option>
+                <option value="1">品红</option>
+                <option value="2">青蓝</option>
+              </select>
+            </label>
+            <label>
+              <span>第 2 层 / 中</span>
+              <select id="layer-middle" aria-label="中层颜色">
+                <option value="0">黄</option>
+                <option value="1" selected>品红</option>
+                <option value="2">青蓝</option>
+              </select>
+            </label>
+            <label>
+              <span>第 3 层 / 底</span>
+              <select id="layer-bottom" aria-label="底层颜色">
+                <option value="0">黄</option>
+                <option value="1">品红</option>
+                <option value="2" selected>青蓝</option>
+              </select>
+            </label>
+          </div>
+          <div class="range-control">
+            <div class="range-label">
+              <span>深度平滑 <small>0 = 保留边缘</small></span>
+              <output id="depth-smooth-output">0</output>
+            </div>
+            <input id="depth-smooth-range" type="range" min="0" max="6" step="1" value="0" aria-label="深度平滑次数" />
+          </div>
+          <div class="range-control">
+            <div class="range-label">
+              <span>深度范围 <small>最大高度</small></span>
+              <output id="depth-range-output">2.0 mm</output>
+            </div>
+            <input id="depth-range-range" type="range" min="1" max="8" step="0.1" value="2" aria-label="深度最大高度" />
+          </div>
+          <label class="invert-row">
+            <input id="depth-invert" type="checkbox" />
+            <span>凹凸反转</span>
+            <small>INVERT</small>
+          </label>
+          <div class="geometry-row">
+            <span>几何栅格 <small>越细越重</small></span>
+            <select id="geometry-cell" aria-label="几何栅格精度">
+              <option value="auto" selected>轮廓自动</option>
+              <option value="0.3">0.30 mm</option>
+              <option value="0.25">0.25 mm</option>
+              <option value="0.2">0.20 mm</option>
+              <option value="0.15">0.15 mm</option>
+              <option value="0.1">0.10 mm</option>
+            </select>
+          </div>
+          <p class="shape-hint">
+            点阵取样间距可调；三层颜色自动保持为三种不同材料。顶层是负片，
+            第 2 层只减第 3 层圆柱，第 1 层减第 2、3 层。
+            几何栅格越细，圆孔边缘越圆滑，但重建越重。
+          </p>
+        </section>
+
+        <section class="panel-section" id="lattice-section">
+          <div class="section-heading">
+            <h2>点阵参数</h2>
+            <span id="rebuild-status">PARAMETRIC</span>
+          </div>
+          <p class="lattice-lock-note" id="lattice-lock-note" hidden>
+            当前颜色由三色图控制；点阵参数暂停参与。
+          </p>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>点阵节距</span>
+              <span class="number-field">
+                <input id="pitch-input" type="number" min="3.5" max="14" step="0.1" value="6.2" title="相邻点阵中心的间距" />
+                <small>mm</small>
+              </span>
+            </label>
+            <label class="field">
+              <span>单元尺寸 <small>占节距</small></span>
+              <span class="number-field">
+                <input id="unit-input" type="number" min="0.16" max="0.68" step="0.01" value="0.36" title="曲面点阵标记的直径占节距比例" />
+                <small>×</small>
+              </span>
+            </label>
+          </div>
+
+          <div class="label-row arrangement-label">
+            <span>点阵排列</span>
+            <span>ARRANGEMENT</span>
+          </div>
+          <div class="segmented" id="arrangement-control">
+            <button class="is-active" data-arrangement="grid" type="button">规则网格</button>
+            <button data-arrangement="staggered" type="button">错列网格</button>
+          </div>
+
+          <div class="range-control slim">
+            <div class="range-label">
+              <span>旋转角度</span>
+              <output id="rotation-output">+00°</output>
+            </div>
+            <input id="rotation-range" type="range" min="-45" max="45" step="1" value="0" />
+          </div>
+
+          <div class="range-control slim">
+            <div class="range-label">
+              <span>随机扰动</span>
+              <output id="jitter-output">0.28</output>
+            </div>
+            <input id="jitter-range" type="range" min="0" max="1" step="0.01" value="0.28" />
+          </div>
+
+          <div class="ratio-block">
+            <div class="label-row">
+              <span>三色面积比例</span>
+              <span>AREA RATIO</span>
+            </div>
+
+            <div class="ratio-row is-yellow">
+              <span class="ratio-name"><i></i>黄</span>
+              <input id="ratio-yellow" type="range" min="5" max="80" step="1" value="42" />
+              <output id="ratio-yellow-output">42%</output>
+            </div>
+            <div class="ratio-row is-magenta">
+              <span class="ratio-name"><i></i>品红</span>
+              <input id="ratio-magenta" type="range" min="5" max="80" step="1" value="34" />
+              <output id="ratio-magenta-output">34%</output>
+            </div>
+            <div class="ratio-row is-cyan">
+              <span class="ratio-name"><i></i>青蓝</span>
+              <input id="ratio-cyan" type="range" min="5" max="80" step="1" value="24" />
+              <output id="ratio-cyan-output">24%</output>
+            </div>
+          </div>
+
+          <div class="seed-row">
+            <label for="seed-input">随机种子</label>
+            <input id="seed-input" type="number" min="1" max="999999" step="1" value="8241" title="控制点阵扰动与三色分配的确定性种子" />
+            <button id="seed-shuffle" type="button">
+              <svg viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M2.5 4.5h2.2l6.6 7h2.2M2.5 11.5h2.2l2-2.1M9.5 6.1l1.8-1.6h2.2M11 3l2 1.5L11 6M11 10l2 1.5L11 13" />
+              </svg>
+              换一组
+            </button>
+          </div>
+        </section>
+
+        <section class="panel-section validation-section">
+          <div class="section-heading">
+            <h2>几何验证</h2>
+            <span class="live-tag"><i></i>LIVE</span>
+          </div>
+
+          <div class="volume-hero">
+            <div>
+              <span>原始浮雕体积</span>
+              <p><strong id="val-original">—</strong><small>cm³</small></p>
+            </div>
+            <div class="volume-operator">≈</div>
+            <div>
+              <span>三件浮雕本体合计</span>
+              <p><strong id="val-sum">—</strong><small>cm³</small></p>
+            </div>
+          </div>
+
+          <div class="difference-strip">
+            <span>本体体积差</span>
+            <strong id="val-difference">—</strong>
+            <i id="difference-pill">PASS</i>
+          </div>
+
+          <div class="connector-strip">
+            <span>分层连接层</span>
+            <strong id="val-connector">+0.00 cm³</strong>
+            <em id="connector-base">顶层底板：—</em>
+          </div>
+
+          <div class="difference-strip exclusion-strip">
+            <span>三件体积重叠</span>
+            <strong id="val-volume-overlap">0.000 cm³</strong>
+            <i id="exclusion-pill">PASS</i>
+          </div>
+
+          <div class="connectivity-row" id="connectivity-row">
+            <span class="connectivity-label">点阵 → 单件</span>
+            <div class="connectivity-chips" aria-label="各颜色零件的表面色岛与连接后实体数量">
+              <span class="conn-yellow"><i></i><b id="component-yellow">—</b><em>→1</em></span>
+              <span class="conn-magenta"><i></i><b id="component-magenta">—</b><em>→1</em></span>
+              <span class="conn-cyan"><i></i><b id="component-cyan">—</b><em>→1</em></span>
+            </div>
+            <em id="connectivity-status">检查中</em>
+          </div>
+
+          <div class="check-grid">
+            <div class="check-card">
+              <span class="check-icon">01</span>
+              <span class="check-label">色域重叠</span>
+              <strong id="val-overlap">0.000 <small>mm²</small></strong>
+              <em>无重叠</em>
+            </div>
+            <div class="check-card">
+              <span class="check-icon">02</span>
+              <span class="check-label">未覆盖区域</span>
+              <strong id="val-uncovered">0.000 <small>mm²</small></strong>
+              <em>全覆盖</em>
+            </div>
+            <div class="check-card">
+              <span class="check-icon">03</span>
+              <span class="check-label">顶部最大偏差</span>
+              <strong id="val-max-deviation">— <small>mm</small></strong>
+              <em>贴合曲面</em>
+            </div>
+            <div class="check-card">
+              <span class="check-icon">04</span>
+              <span class="check-label">浮雕底面</span>
+              <strong>0.000 <small>mm</small></strong>
+              <em>统一平面</em>
+            </div>
+          </div>
+
+          <div class="validation-foot">
+            <div>
+              <span>三色实际面积比</span>
+              <strong id="val-area-ratio">— / — / —</strong>
+            </div>
+            <div>
+              <span>三角面数</span>
+              <strong id="val-triangles">—</strong>
+            </div>
+          </div>
+
+          <details class="proof-details">
+            <summary>查看离散验证细节</summary>
+            <div class="proof-body">
+              <p>
+                三色域由同一张 XY 点阵剖分生成；每个栅格单元只属于一种颜色，
+                该单元从 <code>z = 0</code> 垂直延伸至解析高度 <code>h(x, y)</code>。
+                表面圆环是贴合曲面的点阵标记。表面色岛保持相互独立，
+                底部实心连接层把每种颜色的色岛并入同一件打印实体，三件体积严格互斥。
+              </p>
+              <dl>
+                <div><dt>校验采样点</dt><dd id="proof-samples">—</dd></div>
+                <div><dt>顶部 RMS 偏差</dt><dd id="proof-rms">—</dd></div>
+                <div><dt>解析体积参考</dt><dd id="proof-analytic">—</dd></div>
+                <div><dt>分区墙 / 底面</dt><dd id="proof-closed">—</dd></div>
+                <div><dt>色点 → 单件</dt><dd id="proof-components">—</dd></div>
+                <div><dt>色点柱数</dt><dd id="proof-stems">—</dd></div>
+                <div><dt>体积互斥</dt><dd id="proof-exclusive">—</dd></div>
+                <div><dt>顶层负片色</dt><dd id="proof-base">—</dd></div>
+                <div><dt>连接层体积</dt><dd id="proof-connector">—</dd></div>
+                <div><dt>总打印体积</dt><dd id="proof-total">—</dd></div>
+              </dl>
+            </div>
+          </details>
+        </section>
+      </aside>
+
+      <footer class="footer">
+        <span class="footer-left">3 MATERIALS <i></i> 1 CONTINUOUS RELIEF · LATTICE v8</span>
+        <span class="footer-center">左键旋转 · 滚轮缩放 · 右键平移</span>
+        <span class="footer-right"><span id="field-size">FIELD 90 × 105 mm</span> <i></i> Z ↑ 0.00</span>
+      </footer>
+
+      <div class="loader" id="loader">
+        <div class="loader-mark" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <p>正在构建互补几何</p>
+        <small>BUILDING COMPLEMENTARY VOLUMES</small>
+        <div class="loader-line"><i></i></div>
+      </div>
+
+      <div class="fallback" id="fallback" hidden>
+        <h2>无法初始化 WebGL</h2>
+        <p>请使用支持 WebGL 2 的现代浏览器打开此页面。</p>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
