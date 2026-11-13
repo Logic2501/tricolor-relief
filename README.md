@@ -4,6 +4,9 @@
 
 ## 概览
 
+- GitHub：https://github.com/Logic2501/tricolor-relief
+- Pages：https://logic2501.github.io/tricolor-relief/
+
 浏览器端交互式原型：三色图案 + 深度图 → 三件可独立打印、体积严格互斥的浮雕。
 
 当前版本：
@@ -229,8 +232,8 @@ backups/                版本快照
 
 - 构建：`npm run build`
 - Pages：GitHub Actions，见 `.github/workflows/pages.yml`
-- 仓库：`TODO（建仓后回填）`
-- Pages 地址：`TODO（首次部署成功后回填）`
+- 仓库：https://github.com/Logic2501/tricolor-relief
+- Pages 地址：https://logic2501.github.io/tricolor-relief/
 - 当前本地预览：`http://127.0.0.1:5188/`
 - 默认站点路径：仓库根目录；Vite `base: './'` 以适配 GitHub Pages 子路径。
 
